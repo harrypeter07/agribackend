@@ -16,14 +16,14 @@ try:
     
     # Load model with specific providers and disable optimizations
     providers = ['CPUExecutionProvider']
-    session = ort.InferenceSession("agri_yield.onnx", session_options, providers=providers)
+    session = ort.InferenceSession("working_agricultural_model.onnx", session_options, providers=providers)
     print("Model loaded successfully")
 except Exception as e:
     print(f"Error loading model: {e}")
     # Try alternative approach with different ONNX Runtime version
     try:
         print("Trying alternative loading method...")
-        session = ort.InferenceSession("agri_yield.onnx")
+        session = ort.InferenceSession("working_agricultural_model.onnx")
         print("Model loaded with basic method")
     except Exception as e2:
         print(f"Alternative loading also failed: {e2}")
@@ -31,12 +31,22 @@ except Exception as e:
         session = MockModel()
 
 class InputData(BaseModel):
-    features: list
+    rainfall: float
+    temperature: float
+    humidity: float
+    soil_ph: float
+    fertilizer_usage: float
+    risk_score: float
     
     class Config:
         json_schema_extra = {
             "example": {
-                "features": [6.5, 0, 1, 2]  # soil_ph, crop_name, season, region (encoded)
+                "rainfall": 100.0,
+                "temperature": 25.0,
+                "humidity": 70.0,
+                "soil_ph": 6.5,
+                "fertilizer_usage": 50.0,
+                "risk_score": 0.3
             }
         }
 
@@ -55,15 +65,21 @@ def health_check():
 @app.post("/predict")
 def predict(data: InputData):
     try:
-        # Convert input list to numpy
-        input_array = np.array(data.features, dtype=np.float32).reshape(1, -1)
+        # Prepare input data for the model
+        input_data = {
+            'rainfall': np.array([[data.rainfall]], dtype=np.float32),
+            'temperature': np.array([[data.temperature]], dtype=np.float32),
+            'humidity': np.array([[data.humidity]], dtype=np.float32),
+            'soil_ph': np.array([[data.soil_ph]], dtype=np.float32),
+            'fertilizer_usage': np.array([[data.fertilizer_usage]], dtype=np.float32),
+            'risk_score': np.array([[data.risk_score]], dtype=np.float32)
+        }
         
         # Run inference
-        input_name = session.get_inputs()[0].name
         output_name = session.get_outputs()[0].name
-        result = session.run([output_name], {input_name: input_array})
+        result = session.run([output_name], input_data)
         
-        # Convert result to float32 to handle type mismatches
+        # Convert result to float32
         prediction = result[0].astype(np.float32).tolist()
         return {"prediction": prediction}
     except Exception as e:
