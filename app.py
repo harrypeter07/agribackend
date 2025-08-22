@@ -48,14 +48,12 @@ def read_root():
 def health_check():
     return {
         "status": "healthy",
-        "model_loaded": session is not None
+        "model_loaded": session is not None,
+        "model_type": "mock" if isinstance(session, MockModel) else "onnx"
     }
 
 @app.post("/predict")
 def predict(data: InputData):
-    if session is None:
-        raise HTTPException(status_code=500, detail="Model not loaded")
-    
     try:
         # Convert input list to numpy
         input_array = np.array(data.features, dtype=np.float32).reshape(1, -1)
