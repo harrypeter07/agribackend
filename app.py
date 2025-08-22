@@ -8,7 +8,13 @@ app = FastAPI(title="ML Prediction API", description="FastAPI backend for ONNX m
 
 # Load model once
 try:
-    session = ort.InferenceSession("agri_yield.onnx")
+    # Configure session options to handle type mismatches
+    session_options = ort.SessionOptions()
+    session_options.graph_optimization_level = ort.GraphOptimizationLevel.ORT_ENABLE_ALL
+    
+    # Load model with specific providers
+    providers = ['CPUExecutionProvider']
+    session = ort.InferenceSession("agri_yield.onnx", session_options, providers=providers)
     print("Model loaded successfully")
 except Exception as e:
     print(f"Error loading model: {e}")
@@ -49,6 +55,8 @@ def predict(data: InputData):
         output_name = session.get_outputs()[0].name
         result = session.run([output_name], {input_name: input_array})
         
-        return {"prediction": result[0].tolist()}
+        # Convert result to float32 to handle type mismatches
+        prediction = result[0].astype(np.float32).tolist()
+        return {"prediction": prediction}
     except Exception as e:
         raise HTTPException(status_code=400, detail=f"Prediction error: {str(e)}")
