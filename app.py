@@ -8,27 +8,19 @@ from mock_model import MockModel
 app = FastAPI(title="ML Prediction API", description="FastAPI backend for ONNX model inference")
 
 # Load model once
+session = None
 try:
-    # Configure session options to handle type mismatches
-    session_options = ort.SessionOptions()
-    session_options.graph_optimization_level = ort.GraphOptimizationLevel.ORT_DISABLE_ALL
-    session_options.enable_cpu_mem_arena = False
-    
-    # Load model with specific providers and disable optimizations
-    providers = ['CPUExecutionProvider']
-    session = ort.InferenceSession("working_agricultural_model.onnx", session_options, providers=providers)
+    # Simple model loading without complex options
+    session = ort.InferenceSession("working_agricultural_model.onnx")
     print("Model loaded successfully")
 except Exception as e:
     print(f"Error loading model: {e}")
-    # Try alternative approach with different ONNX Runtime version
     try:
-        print("Trying alternative loading method...")
-        session = ort.InferenceSession("working_agricultural_model.onnx")
-        print("Model loaded with basic method")
-    except Exception as e2:
-        print(f"Alternative loading also failed: {e2}")
         print("Using mock model for testing...")
         session = MockModel()
+    except Exception as e2:
+        print(f"Mock model also failed: {e2}")
+        session = None
 
 class InputData(BaseModel):
     rainfall: float
