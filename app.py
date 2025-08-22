@@ -34,7 +34,7 @@ class InputData(BaseModel):
     features: list
     
     class Config:
-        schema_extra = {
+        json_schema_extra = {
             "example": {
                 "features": [6.5, 0, 1, 2]  # soil_ph, crop_name, season, region (encoded)
             }
