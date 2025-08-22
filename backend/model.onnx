@@ -1,0 +1,3 @@
+# This is a placeholder for the ONNX model file
+# Replace this with your actual trained model.onnx file
+# The model should be compatible with the input/output format expected by the FastAPI app
