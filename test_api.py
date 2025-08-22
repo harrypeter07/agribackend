@@ -7,7 +7,12 @@ def test_predict():
     
     # Test data for agricultural yield prediction
     data = {
-        "features": [6.5, 0, 1, 2]  # soil_ph, crop_name, season, region
+        "rainfall": 100.0,
+        "temperature": 25.0,
+        "humidity": 70.0,
+        "soil_ph": 6.5,
+        "fertilizer_usage": 50.0,
+        "risk_score": 0.3
     }
     
     try:
